@@ -170,7 +170,6 @@
 			const staticDropinViewer = setupViewer(staticSceneParentElement, false);
 			const dynamicDropinViewer = setupViewer(dynamicSceneParentElement, true);
 
-			//todo: ? try addSplatScene and addSplatBuffers
 			/**
 			 * Adds a new splat scene to the given viewer
 			 * @param {GaussianSplats3D.DropInViewer} viewer
@@ -179,6 +178,7 @@
 			function addScene(viewer, debugName) {
 				console.log("Adding scene to ", viewer);
 				viewer
+                    // Observation: The issue happens independent of the method for adding a scene: addSplatScenes (here) or addSplatScene (in other .html files) or addSplatBuffers (tested personally)
 					.addSplatScenes(
 						[
 							{
@@ -196,7 +196,7 @@
 						console.log("Scene added to: ", viewer);
 					})
 					.catch((err) => {
-                        // Observation: even though it throws an error, this should not be reached sicne it's in a promise elsewhere
+                        // Observation: even though it throws an error, this should not be reached since it's in a promise elsewhere
 						console.log("Error loading scene: ", err);
 					});
 			}

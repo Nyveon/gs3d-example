@@ -55,16 +55,12 @@
 			document.getElementById("add-scene").onclick = function () {
 				console.log("Adding scene to viewer");
 				viewer
-					.addSplatScenes(
-						[
-							{
-								path: "bonsai_trimmed.ksplat",
-								rotation: [-0.14724434, -0.0761755, 0.1410657, 0.97602],
-								scale: [1.5, 1.5, 1.5],
-								position: [2, -2, -3.2],
-								splatAlphaRemovalThreshold: 20,
-							},
-						],
+					.addSplatScene(
+						"bonsai_trimmed.ksplat",
+						{
+							progressiveLoad: false,
+							position: [3, 0, 0],
+						},
 						true
 					)
 					.then(() => {
