@@ -5,6 +5,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Document</title>
 
+        <!-- Loading from a CDN doesn't seem to be relevant: tried in local with npm -->
 		<script type="importmap">
 			{
 				"imports": {
@@ -14,33 +15,34 @@
 			}
 		</script>
 
-		<script type="module">
+		<!-- <script type="module">
 			import mkkellogggaussianSplats3d from "https://cdn.jsdelivr.net/npm/@mkkellogg/gaussian-splats-3d@0.4.5/+esm";
-		</script>
+		</script> -->
 
-        <script src="coi-serviceworker.min.js"></script>
+		<!-- How CORS is managed is not relevant to the issue, I tried in local with vite as well -->
+		<script src="coi-serviceworker.min.js"></script>
 
-		<style>
-			body {
-				display: flex;
-				justify-content: center;
-				align-items: center;
-
-				height: 100vh;
-				width: 100vw;
-				margin: 0;
-				padding: 0;
-
-				background-color: black;
-				color: white;
-			}
-		</style>
+        <!-- The styles don't have an impact either -->
+		<link rel="stylesheet" href="style.css" />
 	</head>
 	<body>
-		hi
+		<section>
+			<h1>Static Drop-in Viewer</h1>
 
-        <button onclick="addScene()">Add Scene</button>
+			<button onclick="addScene()">Add Extra Scene</button>
 
+			<div id="static" class="canvas-container"></div>
+		</section>
+
+		<section>
+			<h1>Dynamic Drop-in Viewer</h1>
+
+			<button onclick="addScene()">Add Extra Scene</button>
+
+			<div id="dynamic" class="canvas-container"></div>
+		</section>
+
+		<!-- 
 		<script type="module">
 			import * as GaussianSplats3D from "@mkkellogg/gaussian-splats-3d";
 			import * as THREE from "three";
@@ -155,6 +157,6 @@
             }
 
             window.addScene = addScene
-		</script>
+		</script> -->
 	</body>
 </html>
