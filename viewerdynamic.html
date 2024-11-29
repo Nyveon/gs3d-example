@@ -12,14 +12,14 @@
 				}
 			}
 		</script>
-		<script src="coi-serviceworker.min.js"></script>
-		<link rel="stylesheet" href="style.css" />
+		<script src="./coi-serviceworker.min.js"></script>
+		<link rel="stylesheet" href="./style.css" />
 	</head>
 	<body>
 		<div class="overlay">
 			<h1>Dynamic Viewer</h1>
 
-			<a href="/viewerstatic.html">Link to static viewer version</a>
+			<a href="./viewerstatic.html">Link to static viewer version</a>
 
 			<button id="add-scene">Add Extra Scene</button>
 		</div>
@@ -42,7 +42,7 @@
 				dynamicScene: true, //! This is the only difference with the viewerstatic.html file
 			});
 
-			let path = "bonsai_trimmed.ksplat"; // changed from the original for this folder structure
+			let path = "./bonsai_trimmed.ksplat"; // changed from the original for this folder structure
 
 			viewer
 				.addSplatScene(path, {
