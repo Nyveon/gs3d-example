@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Viewer + dynamicScene = true</title>
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "https://cdn.jsdelivr.net/npm/three@0.171.0/+esm",
+					"@mkkellogg/gaussian-splats-3d": "https://cdn.jsdelivr.net/npm/@mkkellogg/gaussian-splats-3d@0.4.5/+esm"
+				}
+			}
+		</script>
+		<script src="coi-serviceworker.min.js"></script>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<div class="overlay">
+			<h1>Dynamic Viewer</h1>
+
+			<a href="/viewerstatic.html">Link to static viewer version</a>
+
+			<button id="add-scene">Add Extra Scene</button>
+		</div>
+
+		<script type="module">
+			/*
+                This code is the code from https://github.com/mkkellogg/GaussianSplats3D/blob/main/demo/bonsai.html
+                With the following changes for purposes of the test:
+                    - A function to add a splat scene to the viewer
+            */
+
+			import * as GaussianSplats3D from "@mkkellogg/gaussian-splats-3d";
+			import * as THREE from "three";
+
+			const viewer = new GaussianSplats3D.Viewer({
+				cameraUp: [0.01933, -0.7583, -0.65161],
+				initialCameraPosition: [1.54163, 2.68515, -6.37228],
+				initialCameraLookAt: [0.45622, 1.95338, 1.51278],
+				sphericalHarmonicsDegree: 2,
+				dynamicScene: true, //! This is the only difference with the viewerstatic.html file
+			});
+
+			let path = "bonsai_trimmed.ksplat"; // changed from the original for this folder structure
+
+			viewer
+				.addSplatScene(path, {
+					progressiveLoad: false,
+				})
+				.then(() => {
+					viewer.start();
+				});
+
+			document.getElementById("add-scene").onclick = function () {
+				console.log("Adding scene to viewer");
+				viewer
+					.addSplatScenes(
+						[
+							{
+								path: "bonsai_trimmed.ksplat",
+								rotation: [-0.14724434, -0.0761755, 0.1410657, 0.97602],
+								scale: [1.5, 1.5, 1.5],
+								position: [2, -2, -3.2],
+								splatAlphaRemovalThreshold: 20,
+							},
+						],
+						true
+					)
+					.then(() => {
+						console.log("Scene added to viewer ");
+					})
+					.catch((err) => {
+						console.log("Error loading scene: ", err);
+					});
+			};
+		</script>
+	</body>
+</html>

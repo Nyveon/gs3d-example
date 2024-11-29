@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Dynamic</title>
+
+		<!-- Observation: Loading from a CDN doesn't seem to be relevant: tried in local with npm -->
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "https://cdn.jsdelivr.net/npm/three@0.171.0/+esm",
+					"@mkkellogg/gaussian-splats-3d": "https://cdn.jsdelivr.net/npm/@mkkellogg/gaussian-splats-3d@0.4.5/+esm"
+				}
+			}
+		</script>
+
+		<!-- Observation: How CORS is managed is not relevant to the issue, I tried in local with vite as well -->
+		<script src="coi-serviceworker.min.js"></script>
+
+		<!-- Observation: The styles don't have an impact either -->
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<section>
+			<h1>Static Viewer</h1>
+
+			<button id="static-add-scene">Add Extra Scene</button>
+
+			<div id="static" class="canvas-container"></div>
+		</section>
+
+		<section>
+			<h1>Dynamic Viewer</h1>
+
+			<button id="dynamic-add-scene">Add Extra Scene</button>
+
+			<div id="dynamic" class="canvas-container"></div>
+		</section>
+
+		<script type="module">
+			/*
+                This code is the code from https://github.com/mkkellogg/GaussianSplats3D/blob/main/demo/dropin.html
+                With the following changes for purposes of the test:
+                    - setupRenderer takes a parentElement to attach the rootElement to (so there can be two side by side)
+                    - The entire set up is put into a function
+                    - A function to add a splat scene to a specific viewer
+                
+                Observation: these changes don't seem to have an impact on the issue, I tried using the exact same code as in the original file but
+                only adding a button to add a scene, and the issue still happens with dyanmicScene true and does not happen with dynamicScene false.
+            */
+
+			import * as GaussianSplats3D from "@mkkellogg/gaussian-splats-3d";
+			import * as THREE from "three";
+
+            // Identical to base code
+			function setupRenderer(parentElement) {
+				const renderWidth = 800;
+				const renderHeight = 600;
+
+				const rootElement = document.createElement("div");
+				rootElement.style.width = renderWidth + "px";
+				rootElement.style.height = renderHeight + "px";
+				rootElement.style.position = "relative";
+				rootElement.style.left = "50%";
+				rootElement.style.top = "50%";
+				rootElement.style.transform = "translate(-50%, -50%)";
+				parentElement.appendChild(rootElement);
+
+				const renderer = new THREE.WebGLRenderer({
+					antialias: false,
+				});
+				renderer.setSize(renderWidth, renderHeight);
+				rootElement.appendChild(renderer.domElement);
+
+				return {
+					renderer: renderer,
+					renderWidth: renderWidth,
+					renderHeight: renderHeight,
+				};
+			}
+
+            // Identical to base code
+			function setupCamera(renderWidth, renderHeight) {
+				const camera = new THREE.PerspectiveCamera(
+					65,
+					renderWidth / renderHeight,
+					0.1,
+					500
+				);
+				camera.position.copy(new THREE.Vector3().fromArray([-1, -4, 6]));
+				camera.lookAt(new THREE.Vector3().fromArray([0, 4, -0]));
+				camera.up = new THREE.Vector3().fromArray([0, -1, -0.6]).normalize();
+				return camera;
+			}
+
+            // Identical to base code
+			function setupThreeScene() {
+				const threeScene = new THREE.Scene();
+				const boxColor = 0xbbbbbb;
+				const boxGeometry = new THREE.BoxGeometry(2, 2, 2);
+				const boxMesh = new THREE.Mesh(
+					boxGeometry,
+					new THREE.MeshBasicMaterial({ color: boxColor })
+				);
+				threeScene.add(boxMesh);
+				boxMesh.position.set(3, 2, 2);
+				return threeScene;
+			}
+
+            // Identical to base code
+			function setupControls(camera, renderer) {
+				const controls = new GaussianSplats3D.OrbitControls(
+					camera,
+					renderer.domElement
+				);
+				controls.rotateSpeed = 0.5;
+				controls.maxPolarAngle = Math.PI * 0.75;
+				controls.minPolarAngle = 0.1;
+				controls.enableDamping = true;
+				controls.dampingFactor = 0.05;
+				return controls;
+			}
+
+            /**
+             * Sets up a new viewer with the given parent element and if it's a dynamic scene or not
+             * @param {HTMLElement} parentElement
+             * @param {boolean} dynamicScene
+             * @returns {GaussianSplats3D.DropInViewer}
+             */
+			function setupViewer(parentElement, dynamicScene) {
+				const { renderer, renderWidth, renderHeight } =
+					setupRenderer(parentElement);
+				const camera = setupCamera(renderWidth, renderHeight);
+				const threeScene = setupThreeScene();
+				const controls = setupControls(camera, renderer);
+
+				const viewer = new GaussianSplats3D.DropInViewer({
+					dynamicScene: dynamicScene,
+				});
+				viewer.addSplatScenes(
+					[
+						{
+							path: "bonsai_trimmed.ksplat",
+							rotation: [-0.14724434, -0.0761755, 0.1410657, 0.97602],
+							scale: [1.5, 1.5, 1.5],
+							position: [-3, -2, -3.2],
+							splatAlphaRemovalThreshold: 20,
+						},
+					],
+					true
+				);
+				threeScene.add(viewer);
+
+				requestAnimationFrame(update);
+				function update() {
+					requestAnimationFrame(update);
+					controls.update();
+					renderer.render(threeScene, camera);
+				}
+
+				return viewer;
+			}
+
+			const staticSceneParentElement = document.getElementById("static");
+			const dynamicSceneParentElement = document.getElementById("dynamic");
+
+			// Observation: loading both viewers at the same time doesn't seem to have an impact on the issue, I attempted doing them in separate pages and it happened anyways
+            // Observation: also happens with normal viewers, I'm using dropin here to show them side by side
+			const staticDropinViewer = setupViewer(staticSceneParentElement, false);
+			const dynamicDropinViewer = setupViewer(dynamicSceneParentElement, true);
+
+			//todo: ? try addSplatScene and addSplatBuffers
+			/**
+			 * Adds a new splat scene to the given viewer
+			 * @param {GaussianSplats3D.DropInViewer} viewer
+			 * @param {string} debugName to be shown in console logs
+			 */
+			function addScene(viewer, debugName) {
+				console.log("Adding scene to ", viewer);
+				viewer
+					.addSplatScenes(
+						[
+							{
+								// Observation: I'm not sure if these parameters make a difference, but I at least found no combination of parameters that didn't have the issue
+								path: "bonsai_trimmed.ksplat",
+								rotation: [-0.14724434, -0.0761755, 0.1410657, 0.97602],
+								scale: [1.5, 1.5, 1.5],
+								position: [2, -2, -3.2],
+								splatAlphaRemovalThreshold: 20,
+							},
+						],
+						true
+					)
+					.then(() => {
+						console.log("Scene added to: ", viewer);
+					})
+					.catch((err) => {
+                        // Observation: even though it throws an error, this should not be reached sicne it's in a promise elsewhere
+						console.log("Error loading scene: ", err);
+					});
+			}
+
+            //todo: ? check this
+            // Observation: the fact this is done with buttons doesn't seem to matter, if you simply do it once the scene is loaded in a .finally it also happens
+			const staticAddSceneButton = document.getElementById("static-add-scene");
+			const dynamicAddSceneButton =
+				document.getElementById("dynamic-add-scene");
+
+			staticAddSceneButton.onclick = function () {
+				addScene(staticDropinViewer, "static dropin viewer");
+			};
+			dynamicAddSceneButton.onclick = function () {
+				addScene(dynamicDropinViewer, "dynamic dropin viewer");
+			};
+		</script>
+	</body>
+</html>
